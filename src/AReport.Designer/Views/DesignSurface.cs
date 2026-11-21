@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -135,7 +136,7 @@ public sealed class DesignSurface : FrameworkElement
         Brush brush, Rect box, HAlign horizontal, VAlign vertical, bool wrap)
     {
         double inset = Scale; // 1 mm of padding, like the PDF layout
-        var typeface = new Typeface(FamilyName(family), italic ? FontStyles.Italic : FontStyles.Normal,
+        var typeface = new Typeface(new FontFamily(FamilyName(family)), italic ? FontStyles.Italic : FontStyles.Normal,
             bold ? FontWeights.Bold : FontWeights.Normal, FontStretches.Normal);
 
         var formatted = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface,

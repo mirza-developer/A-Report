@@ -53,7 +53,11 @@
             _url = await Browser.CreateUrlAsync(Report);
     }
 
-    private ValueTask DownloadAsync() => Report is null ? ValueTask.CompletedTask : Browser.DownloadAsync(Report);
+    private async Task DownloadAsync()
+    {
+        if (Report is not null)
+            await Browser.DownloadAsync(Report);
+    }
 
     private async Task RevokeAsync()
     {
