@@ -1,0 +1,374 @@
+{
+  "variables": {
+    "InvoiceNumber": "INV-2026-0042",
+    "Company": "Avizhe Group",
+    "Customer": {
+      "Name": "Ada Lovelace",
+      "Address": "12 Analytical Engine Road"
+    }
+  },
+  "dataSources": {
+    "Lines": [
+      {
+        "Description": "Consulting item 1",
+        "Qty": 6,
+        "UnitPrice": 114.0,
+        "Amount": 684.0
+      },
+      {
+        "Description": "Consulting item 2",
+        "Qty": 7,
+        "UnitPrice": 79.86,
+        "Amount": 559.02
+      },
+      {
+        "Description": "Consulting item 3",
+        "Qty": 2,
+        "UnitPrice": 99.45,
+        "Amount": 198.9
+      },
+      {
+        "Description": "Consulting item 4",
+        "Qty": 2,
+        "UnitPrice": 47.05,
+        "Amount": 94.1
+      },
+      {
+        "Description": "Consulting item 5",
+        "Qty": 1,
+        "UnitPrice": 109.62,
+        "Amount": 109.62
+      },
+      {
+        "Description": "Consulting item 6",
+        "Qty": 4,
+        "UnitPrice": 9.31,
+        "Amount": 37.24
+      },
+      {
+        "Description": "Consulting item 7",
+        "Qty": 7,
+        "UnitPrice": 53.09,
+        "Amount": 371.63
+      },
+      {
+        "Description": "Consulting item 8",
+        "Qty": 4,
+        "UnitPrice": 15.43,
+        "Amount": 61.72
+      },
+      {
+        "Description": "Consulting item 9",
+        "Qty": 7,
+        "UnitPrice": 11.8,
+        "Amount": 82.6
+      },
+      {
+        "Description": "Consulting item 10",
+        "Qty": 2,
+        "UnitPrice": 113.96,
+        "Amount": 227.92
+      },
+      {
+        "Description": "Consulting item 11",
+        "Qty": 1,
+        "UnitPrice": 71.37,
+        "Amount": 71.37
+      },
+      {
+        "Description": "Consulting item 12",
+        "Qty": 7,
+        "UnitPrice": 10.7,
+        "Amount": 74.9
+      },
+      {
+        "Description": "Consulting item 13",
+        "Qty": 4,
+        "UnitPrice": 10.36,
+        "Amount": 41.44
+      },
+      {
+        "Description": "Consulting item 14",
+        "Qty": 3,
+        "UnitPrice": 38.31,
+        "Amount": 114.93
+      },
+      {
+        "Description": "Consulting item 15",
+        "Qty": 3,
+        "UnitPrice": 67.18,
+        "Amount": 201.54
+      },
+      {
+        "Description": "Consulting item 16",
+        "Qty": 5,
+        "UnitPrice": 69.43,
+        "Amount": 347.15
+      },
+      {
+        "Description": "Consulting item 17",
+        "Qty": 3,
+        "UnitPrice": 16.85,
+        "Amount": 50.55
+      },
+      {
+        "Description": "Consulting item 18",
+        "Qty": 4,
+        "UnitPrice": 47.83,
+        "Amount": 191.32
+      },
+      {
+        "Description": "Consulting item 19",
+        "Qty": 9,
+        "UnitPrice": 86.89,
+        "Amount": 782.01
+      },
+      {
+        "Description": "Consulting item 20",
+        "Qty": 1,
+        "UnitPrice": 76.19,
+        "Amount": 76.19
+      },
+      {
+        "Description": "Consulting item 21",
+        "Qty": 8,
+        "UnitPrice": 83.25,
+        "Amount": 666.0
+      },
+      {
+        "Description": "Consulting item 22",
+        "Qty": 7,
+        "UnitPrice": 94.38,
+        "Amount": 660.66
+      },
+      {
+        "Description": "Consulting item 23",
+        "Qty": 8,
+        "UnitPrice": 72.34,
+        "Amount": 578.72
+      },
+      {
+        "Description": "Consulting item 24",
+        "Qty": 8,
+        "UnitPrice": 46.58,
+        "Amount": 372.64
+      },
+      {
+        "Description": "Consulting item 25",
+        "Qty": 4,
+        "UnitPrice": 96.35,
+        "Amount": 385.4
+      },
+      {
+        "Description": "Consulting item 26",
+        "Qty": 4,
+        "UnitPrice": 14.41,
+        "Amount": 57.64
+      },
+      {
+        "Description": "Consulting item 27",
+        "Qty": 5,
+        "UnitPrice": 65.4,
+        "Amount": 327.0
+      },
+      {
+        "Description": "Consulting item 28",
+        "Qty": 6,
+        "UnitPrice": 88.89,
+        "Amount": 533.34
+      },
+      {
+        "Description": "Consulting item 29",
+        "Qty": 5,
+        "UnitPrice": 75.03,
+        "Amount": 375.15
+      },
+      {
+        "Description": "Consulting item 30",
+        "Qty": 2,
+        "UnitPrice": 18.58,
+        "Amount": 37.16
+      },
+      {
+        "Description": "Consulting item 31",
+        "Qty": 7,
+        "UnitPrice": 23.97,
+        "Amount": 167.79
+      },
+      {
+        "Description": "Consulting item 32",
+        "Qty": 6,
+        "UnitPrice": 22.48,
+        "Amount": 134.88
+      },
+      {
+        "Description": "Consulting item 33",
+        "Qty": 8,
+        "UnitPrice": 53.5,
+        "Amount": 428.0
+      },
+      {
+        "Description": "Consulting item 34",
+        "Qty": 2,
+        "UnitPrice": 92.93,
+        "Amount": 185.86
+      },
+      {
+        "Description": "Consulting item 35",
+        "Qty": 6,
+        "UnitPrice": 44.11,
+        "Amount": 264.66
+      },
+      {
+        "Description": "Consulting item 36",
+        "Qty": 6,
+        "UnitPrice": 73.35,
+        "Amount": 440.1
+      },
+      {
+        "Description": "Consulting item 37",
+        "Qty": 8,
+        "UnitPrice": 12.91,
+        "Amount": 103.28
+      },
+      {
+        "Description": "Consulting item 38",
+        "Qty": 2,
+        "UnitPrice": 113.64,
+        "Amount": 227.28
+      },
+      {
+        "Description": "Consulting item 39",
+        "Qty": 8,
+        "UnitPrice": 85.16,
+        "Amount": 681.28
+      },
+      {
+        "Description": "Consulting item 40",
+        "Qty": 2,
+        "UnitPrice": 11.98,
+        "Amount": 23.96
+      },
+      {
+        "Description": "Consulting item 41",
+        "Qty": 5,
+        "UnitPrice": 79.42,
+        "Amount": 397.1
+      },
+      {
+        "Description": "Consulting item 42",
+        "Qty": 8,
+        "UnitPrice": 37.73,
+        "Amount": 301.84
+      },
+      {
+        "Description": "Consulting item 43",
+        "Qty": 7,
+        "UnitPrice": 107.01,
+        "Amount": 749.07
+      },
+      {
+        "Description": "Consulting item 44",
+        "Qty": 6,
+        "UnitPrice": 7.59,
+        "Amount": 45.54
+      },
+      {
+        "Description": "Consulting item 45",
+        "Qty": 8,
+        "UnitPrice": 45.88,
+        "Amount": 367.04
+      },
+      {
+        "Description": "Consulting item 46",
+        "Qty": 2,
+        "UnitPrice": 61.77,
+        "Amount": 123.54
+      },
+      {
+        "Description": "Consulting item 47",
+        "Qty": 4,
+        "UnitPrice": 93.35,
+        "Amount": 373.4
+      },
+      {
+        "Description": "Consulting item 48",
+        "Qty": 3,
+        "UnitPrice": 89.91,
+        "Amount": 269.73
+      },
+      {
+        "Description": "Consulting item 49",
+        "Qty": 7,
+        "UnitPrice": 49.96,
+        "Amount": 349.72
+      },
+      {
+        "Description": "Consulting item 50",
+        "Qty": 8,
+        "UnitPrice": 14.27,
+        "Amount": 114.16
+      },
+      {
+        "Description": "Consulting item 51",
+        "Qty": 8,
+        "UnitPrice": 51.19,
+        "Amount": 409.52
+      },
+      {
+        "Description": "Consulting item 52",
+        "Qty": 5,
+        "UnitPrice": 106.59,
+        "Amount": 532.95
+      },
+      {
+        "Description": "Consulting item 53",
+        "Qty": 7,
+        "UnitPrice": 104.36,
+        "Amount": 730.52
+      },
+      {
+        "Description": "Consulting item 54",
+        "Qty": 5,
+        "UnitPrice": 86.24,
+        "Amount": 431.2
+      },
+      {
+        "Description": "Consulting item 55",
+        "Qty": 6,
+        "UnitPrice": 83.51,
+        "Amount": 501.06
+      },
+      {
+        "Description": "Consulting item 56",
+        "Qty": 7,
+        "UnitPrice": 115.14,
+        "Amount": 805.98
+      },
+      {
+        "Description": "Consulting item 57",
+        "Qty": 3,
+        "UnitPrice": 14.54,
+        "Amount": 43.62
+      },
+      {
+        "Description": "Consulting item 58",
+        "Qty": 3,
+        "UnitPrice": 31.68,
+        "Amount": 95.04
+      },
+      {
+        "Description": "Consulting item 59",
+        "Qty": 4,
+        "UnitPrice": 6.39,
+        "Amount": 25.56
+      },
+      {
+        "Description": "Consulting item 60",
+        "Qty": 3,
+        "UnitPrice": 35.22,
+        "Amount": 105.66
+      }
+    ]
+  }
+}

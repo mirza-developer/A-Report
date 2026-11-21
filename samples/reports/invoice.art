@@ -1,0 +1,187 @@
+{
+  "format": "art",
+  "schemaVersion": 1,
+  "name": "Invoice",
+  "page": {
+    "widthMm": 210,
+    "heightMm": 297,
+    "marginLeftMm": 10,
+    "marginTopMm": 10,
+    "marginRightMm": 10,
+    "marginBottomMm": 24
+  },
+  "elements": [
+    {
+      "type": "rectangle",
+      "id": "bg-band",
+      "name": "Header band",
+      "x": 0,
+      "y": 0,
+      "width": 210,
+      "height": 32,
+      "fillColor": "#1F3A5F",
+      "strokeColor": null,
+      "strokeWidthMm": 0,
+      "repeatOnEveryPage": false
+    },
+    {
+      "type": "image",
+      "id": "logo",
+      "name": "Logo",
+      "x": 10,
+      "y": 5,
+      "width": 22,
+      "height": 22,
+      "embeddedImageBase64": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAABmElEQVR42u3YwQ3CMBREQXdCHzRAD7lQL+c0kE6I6AAJIll+86VtYHcOlse46G7351v+lzHrGScIQ/FRDEoOQ1BsGIFCowiUGIaguDgCpYUBKCyMQFFhBAqKI1BOGIBi4giUAoBiqgAUEkegDAAUAoAAIABIDIAi4giUAIAiABAAJstqBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHwL4NgeUwUAAAAAAAAAAAAAAAAAAAAAAADwEQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPwC4LUfUwUAAAAAAAAAAPAIBAAAAAAAAAAAAAAAAAAAAAAAAHwEAQAAAAAAAAAAHoEAAAAAAAAAAAAAAAAAAAAAAACAjyAAAAAAAAAAAMAjEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABWAyAACAACgFwL4HOKCI8PAAAAAKAMAAQAiQKAID4+AAAAUAcAQXx8AACAoD4+BMaHwPgAAACB8UEwPATGh8D4IBgeBqODsejQJ/yt5PMbYykIAAAAAElFTkSuQmCC",
+      "fit": "Contain"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "name": "Title",
+      "x": 36,
+      "y": 6,
+      "width": 120,
+      "height": 10,
+      "text": "Invoice {InvoiceNumber}",
+      "fontSize": 20,
+      "bold": true,
+      "color": "#FFFFFF",
+      "verticalAlignment": "Middle"
+    },
+    {
+      "type": "text",
+      "id": "company",
+      "name": "Company",
+      "x": 36,
+      "y": 17,
+      "width": 120,
+      "height": 8,
+      "text": "{Company}",
+      "fontSize": 10,
+      "color": "#C9D3E0",
+      "verticalAlignment": "Middle"
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "name": "Date",
+      "x": 150,
+      "y": 6,
+      "width": 50,
+      "height": 8,
+      "text": "{Now:yyyy-MM-dd}",
+      "fontSize": 10,
+      "color": "#FFFFFF",
+      "horizontalAlignment": "Right",
+      "verticalAlignment": "Middle"
+    },
+    {
+      "type": "text",
+      "id": "billto-label",
+      "name": "Bill to label",
+      "x": 10,
+      "y": 40,
+      "width": 60,
+      "height": 6,
+      "text": "BILL TO",
+      "fontSize": 8,
+      "bold": true,
+      "color": "#6B7280"
+    },
+    {
+      "type": "text",
+      "id": "billto",
+      "name": "Bill to",
+      "x": 10,
+      "y": 46,
+      "width": 100,
+      "height": 16,
+      "text": "{Customer.Name}\n{Customer.Address}",
+      "fontSize": 11
+    },
+    {
+      "type": "table",
+      "id": "lines",
+      "name": "Lines",
+      "x": 10,
+      "y": 70,
+      "width": 190,
+      "height": 32,
+      "dataSource": "Lines",
+      "columns": [
+        {
+          "header": "#",
+          "binding": "#",
+          "weight": 0.6,
+          "alignment": "Center"
+        },
+        {
+          "header": "Description",
+          "binding": "Description",
+          "weight": 5
+        },
+        {
+          "header": "Qty",
+          "binding": "Qty",
+          "weight": 1,
+          "alignment": "Right"
+        },
+        {
+          "header": "Unit price",
+          "binding": "UnitPrice",
+          "weight": 1.6,
+          "alignment": "Right",
+          "format": "N2"
+        },
+        {
+          "header": "Amount",
+          "binding": "Amount",
+          "weight": 1.8,
+          "alignment": "Right",
+          "format": "N2"
+        }
+      ],
+      "zebraColor": "#F3F4F6"
+    },
+    {
+      "type": "line",
+      "id": "footer-rule",
+      "name": "Footer rule",
+      "x": 10,
+      "y": 277,
+      "width": 190,
+      "height": 0,
+      "strokeColor": "#9CA3AF",
+      "strokeWidthMm": 0.2,
+      "repeatOnEveryPage": true
+    },
+    {
+      "type": "text",
+      "id": "footer-company",
+      "name": "Footer company",
+      "x": 10,
+      "y": 279,
+      "width": 120,
+      "height": 6,
+      "text": "{Company} - thank you for your business",
+      "fontSize": 8,
+      "color": "#6B7280",
+      "repeatOnEveryPage": true
+    },
+    {
+      "type": "text",
+      "id": "footer-page",
+      "name": "Footer page",
+      "x": 150,
+      "y": 279,
+      "width": 50,
+      "height": 6,
+      "text": "Page {PageNumber} of {PageCount}",
+      "fontSize": 8,
+      "color": "#6B7280",
+      "horizontalAlignment": "Right",
+      "repeatOnEveryPage": true
+    }
+  ]
+}

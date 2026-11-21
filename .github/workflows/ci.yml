@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    # Windows: the designer is WPF. Core and the view-model tests are cross-platform.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore A-Report.slnx
+
+      - name: Build
+        run: dotnet build A-Report.slnx -c Release --no-restore
+
+      - name: Test
+        run: dotnet test A-Report.slnx -c Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/**/coverage.cobertura.xml
+
+  # The platform-independent parts must keep working off Windows too.
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet test tests/AReport.Core.Tests -c Release
+      - run: dotnet test tests/AReport.Designer.Tests -c Release

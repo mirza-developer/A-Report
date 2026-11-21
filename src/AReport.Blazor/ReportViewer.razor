@@ -1,0 +1,73 @@
+@implements IAsyncDisposable
+@inject IReportBrowser Browser
+
+<div class="areport-viewer">
+    @if (ShowToolbar && Report is not null)
+    {
+        <div class="areport-viewer__toolbar">
+            <span class="areport-viewer__title">@Report.FileName</span>
+            <span class="areport-viewer__pages">@Report.PageCount @(Report.PageCount == 1 ? "page" : "pages")</span>
+            <button type="button" class="areport-viewer__button" @onclick="DownloadAsync">Download</button>
+            @if (_url is not null)
+            {
+                <a class="areport-viewer__button" href="@_url" target="_blank" rel="noopener">Open in new tab</a>
+            }
+        </div>
+    }
+
+    @if (_url is not null)
+    {
+        <iframe class="areport-viewer__frame" src="@_url" title="@(Title ?? Report?.FileName ?? "Report")" style="width:100%;height:@Height;border:0;"></iframe>
+    }
+    else if (Report is null)
+    {
+        @ChildContent
+    }
+</div>
+
+@code {
+    private ReportResult? _shown;
+    private string? _url;
+
+    /// <summary>The generated report to display.</summary>
+    [Parameter] public ReportResult? Report { get; set; }
+
+    /// <summary>CSS height of the viewer frame, for example <c>80vh</c>.</summary>
+    [Parameter] public string Height { get; set; } = "75vh";
+
+    [Parameter] public bool ShowToolbar { get; set; } = true;
+
+    /// <summary>Accessible title of the frame (defaults to the file name).</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Shown while no report is set.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ReferenceEquals(_shown, Report)) return;
+
+        await RevokeAsync();
+        _shown = Report;
+        if (Report is not null)
+            _url = await Browser.CreateUrlAsync(Report);
+    }
+
+    private ValueTask DownloadAsync() => Report is null ? ValueTask.CompletedTask : Browser.DownloadAsync(Report);
+
+    private async Task RevokeAsync()
+    {
+        if (_url is null) return;
+        var url = _url;
+        _url = null;
+        try
+        {
+            await Browser.RevokeUrlAsync(url);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync() => await RevokeAsync();
+}

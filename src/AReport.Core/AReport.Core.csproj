@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <PackageId>AReport.Core</PackageId>
+    <RootNamespace>AReport</RootNamespace>
+    <Description>Report engine for .NET: loads .art report designs, binds data and renders PDF. No third-party dependencies.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="AReport.Core.Tests" />
+  </ItemGroup>
+</Project>

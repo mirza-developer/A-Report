@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>AReport.Designer</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <Description>Platform-independent view-models of the A-Report designer (testable without WPF).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AReport.Core\AReport.Core.csproj" />
+    <InternalsVisibleTo Include="AReport.Designer.Tests" />
+  </ItemGroup>
+</Project>

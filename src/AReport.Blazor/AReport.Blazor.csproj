@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <PropertyGroup>
+    <!-- Strict warnings (CI) are on for AReport.Core only until this project has had a green CI run; then remove this line. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <TargetFramework>net9.0</TargetFramework>
+    <PackageId>AReport.Blazor</PackageId>
+    <RootNamespace>AReport.Blazor</RootNamespace>
+    <Description>Blazor Server integration for A-Report: dependency injection, a PDF viewer component and a browser download helper.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AReport.Core\AReport.Core.csproj" />
+  </ItemGroup>
+</Project>

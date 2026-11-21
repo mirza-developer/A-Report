@@ -1,0 +1,14 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.nupkg
+*.snupkg
+TestResults/
+coverage/
+*.log
+artifacts/
+publish/

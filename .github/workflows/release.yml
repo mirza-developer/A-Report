@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Version from tag
+        id: version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and test
+        run: |
+          dotnet build A-Report.slnx -c Release -p:Version=${{ steps.version.outputs.value }}
+          dotnet test A-Report.slnx -c Release --no-build
+
+      - name: Pack NuGet packages
+        run: |
+          dotnet pack src/AReport.Core/AReport.Core.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.value }} -o artifacts
+          dotnet pack src/AReport.Blazor/AReport.Blazor.csproj -c Release --no-build -p:Version=${{ steps.version.outputs.value }} -o artifacts
+
+      - name: Push to nuget.org
+        run: dotnet nuget push "artifacts/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Publish the designer
+        run: dotnet publish src/AReport.Designer/AReport.Designer.csproj -c Release -r win-x64 --self-contained false -p:Version=${{ steps.version.outputs.value }} -o publish/designer
+
+      - name: Zip the designer
+        shell: pwsh
+        run: Compress-Archive -Path publish/designer/* -DestinationPath artifacts/AReport.Designer-${{ steps.version.outputs.value }}-win-x64.zip
+
+      - name: GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*.nupkg
+            artifacts/*.snupkg
+            artifacts/*.zip
+          generate_release_notes: true
+          prerelease: ${{ contains(steps.version.outputs.value, '-') }}

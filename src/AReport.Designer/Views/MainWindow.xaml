@@ -1,0 +1,171 @@
+<Window x:Class="AReport.Designer.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AReport.Designer;assembly=AReport.Designer.ViewModels"
+        xmlns:local="clr-namespace:AReport.Designer.Views"
+        Title="{Binding WindowTitle}" Width="1280" Height="800" MinWidth="720" MinHeight="520"
+        Background="{DynamicResource Brush.Background}" UseLayoutRounding="True" SnapsToDevicePixels="True">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:HexToBrushConverter x:Key="HexToBrush" />
+    </Window.Resources>
+
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding NewCommand}" />
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="{Binding OpenCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="{Binding SaveAsCommand}" />
+        <KeyBinding Key="Z" Modifiers="Ctrl" Command="{Binding UndoCommand}" />
+        <KeyBinding Key="Y" Modifiers="Ctrl" Command="{Binding RedoCommand}" />
+        <KeyBinding Key="D" Modifiers="Ctrl" Command="{Binding DuplicateCommand}" />
+        <KeyBinding Key="F5" Command="{Binding PreviewCommand}" />
+        <KeyBinding Key="D0" Modifiers="Ctrl" Command="{Binding ZoomResetCommand}" />
+        <KeyBinding Key="OemPlus" Modifiers="Ctrl" Command="{Binding ZoomInCommand}" />
+        <KeyBinding Key="OemMinus" Modifiers="Ctrl" Command="{Binding ZoomOutCommand}" />
+    </Window.InputBindings>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" MinHeight="{DynamicResource Size.Toolbar}" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" MinHeight="{DynamicResource Size.StatusBar}" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <Border Grid.Row="0" Background="{DynamicResource Brush.Background}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,0,1">
+            <DockPanel Margin="{StaticResource Inset.2}" LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                    <Button Content="New" Style="{StaticResource Button.Ghost}" Command="{Binding NewCommand}" ToolTip="New report (Ctrl+N)" AutomationProperties.Name="New report" />
+                    <Button Content="Open" Style="{StaticResource Button.Ghost}" Command="{Binding OpenCommand}" ToolTip="Open report (Ctrl+O)" AutomationProperties.Name="Open report" />
+                    <Button Content="Save" Style="{StaticResource Button.Ghost}" Command="{Binding SaveCommand}" ToolTip="Save (Ctrl+S)" AutomationProperties.Name="Save report" />
+                    <Button Content="Save as" Style="{StaticResource Button.Ghost}" Command="{Binding SaveAsCommand}" ToolTip="Save as (Ctrl+Shift+S)" AutomationProperties.Name="Save report as" />
+                    <Border Width="1" Background="{DynamicResource Brush.Border}" Margin="{StaticResource Inset.1}" />
+                    <Button Content="Undo" Style="{StaticResource Button.Ghost}" Command="{Binding UndoCommand}" ToolTip="Undo (Ctrl+Z)" AutomationProperties.Name="Undo" />
+                    <Button Content="Redo" Style="{StaticResource Button.Ghost}" Command="{Binding RedoCommand}" ToolTip="Redo (Ctrl+Y)" AutomationProperties.Name="Redo" />
+                    <Border Width="1" Background="{DynamicResource Brush.Border}" Margin="{StaticResource Inset.1}" />
+                    <Button Content="Load sample data" Style="{StaticResource Button.Ghost}" Command="{Binding LoadSampleDataCommand}" ToolTip="Use a JSON file as preview data" AutomationProperties.Name="Load sample data" />
+                    <Button Content="Preview PDF" Style="{StaticResource Button.Primary}" Command="{Binding PreviewCommand}" ToolTip="Preview PDF (F5)" AutomationProperties.Name="Preview PDF" Margin="{StaticResource Inset.1}" />
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <StackPanel x:Name="ZoomGroup" Orientation="Horizontal">
+                        <Button Content="−" Style="{StaticResource Button.Ghost}" Command="{Binding ZoomOutCommand}" ToolTip="Zoom out (Ctrl+-)" AutomationProperties.Name="Zoom out" />
+                        <Button Content="{Binding ZoomText}" Style="{StaticResource Button.Ghost}" Command="{Binding ZoomResetCommand}" ToolTip="Reset to 100 % (Ctrl+0)" AutomationProperties.Name="Reset zoom" MinWidth="64" />
+                        <Button Content="+" Style="{StaticResource Button.Ghost}" Command="{Binding ZoomInCommand}" ToolTip="Zoom in (Ctrl++)" AutomationProperties.Name="Zoom in" />
+                    </StackPanel>
+                    <ToggleButton x:Name="PropertiesToggle" Content="Properties" Style="{StaticResource ToggleButton.Ghost}" Visibility="Collapsed"
+                                  AutomationProperties.Name="Show properties panel" Checked="OnPropertiesToggleChanged" Unchecked="OnPropertiesToggleChanged" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Work area -->
+        <Grid Grid.Row="1" x:Name="Workspace">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="{DynamicResource Size.CanvasMin}" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Toolbox -->
+            <Border x:Name="Toolbox" Grid.Column="0" Width="{DynamicResource Size.ToolboxWide}" Background="{DynamicResource Brush.Background}"
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,0,1,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="{StaticResource Inset.2}">
+                        <TextBlock x:Name="ToolboxHeading" Text="Add element" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Text" Command="{Binding AddElementCommand}" CommandParameter="text" ToolTip="Add a text box" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Rectangle" Command="{Binding AddElementCommand}" CommandParameter="rectangle" ToolTip="Add a rectangle" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Line" Command="{Binding AddElementCommand}" CommandParameter="line" ToolTip="Add a line" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Image" Command="{Binding AddElementCommand}" CommandParameter="image" ToolTip="Add an image from a file" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Table" Command="{Binding AddElementCommand}" CommandParameter="table" ToolTip="Add a data table" Margin="{StaticResource Inset.1}" />
+
+                        <TextBlock x:Name="ArrangeHeading" Text="Selected element" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Duplicate" Command="{Binding DuplicateCommand}" ToolTip="Duplicate (Ctrl+D)" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Delete" Command="{Binding DeleteCommand}" ToolTip="Delete (Delete)" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Bring to front" Command="{Binding BringToFrontCommand}" ToolTip="Draw on top of the others" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Send to back" Command="{Binding SendToBackCommand}" ToolTip="Draw behind the others" Margin="{StaticResource Inset.1}" />
+                        <Button Tag="Columns" Command="{Binding EditColumnsCommand}" ToolTip="Edit the columns of the selected table" Margin="{StaticResource Inset.1}" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Canvas -->
+            <ScrollViewer x:Name="Scroller" Grid.Column="1" Background="{DynamicResource Brush.Canvas}"
+                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                          PreviewMouseWheel="OnCanvasMouseWheel">
+                <Grid MinWidth="{Binding ViewportWidth, ElementName=Scroller}">
+                    <local:DesignSurface x:Name="Surface" HorizontalAlignment="Center" VerticalAlignment="Top"
+                                         AutomationProperties.Name="Report page. Use the arrow keys to move the selected element." />
+                </Grid>
+            </ScrollViewer>
+
+            <!-- Properties -->
+            <Border x:Name="PropertiesPanel" Grid.Column="2" Width="{DynamicResource Size.PropertiesWidth}" Background="{DynamicResource Brush.Background}"
+                    BorderBrush="{DynamicResource Brush.Border}" BorderThickness="1,0,0,0">
+                <Grid Margin="{StaticResource Inset.4}">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Grid.Row="0" Margin="{StaticResource Inset.1}">
+                        <TextBlock Text="Properties" Style="{StaticResource Text.Subtitle}" />
+                        <TextBlock Text="{Binding SelectionText}" Style="{StaticResource Text.Caption}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl ItemsSource="{Binding Properties}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:PropertyRow}">
+                                    <Border Padding="{StaticResource Inset.1}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Label}" Style="{StaticResource Text.Caption}"
+                                                       Visibility="{Binding ShowLabel, Converter={StaticResource BoolToVisibility}}" />
+
+                                            <DockPanel Visibility="{Binding IsTextual, Converter={StaticResource BoolToVisibility}}">
+                                                <Border DockPanel.Dock="Right" Width="{DynamicResource Size.Control}" Height="{DynamicResource Size.Control}"
+                                                        Margin="{StaticResource Inset.1}" CornerRadius="{DynamicResource Radius.Control}"
+                                                        BorderBrush="{DynamicResource Brush.BorderStrong}" BorderThickness="1"
+                                                        Background="{Binding SwatchHex, Converter={StaticResource HexToBrush}}"
+                                                        Visibility="{Binding HasColor, Converter={StaticResource BoolToVisibility}}" />
+                                                <TextBox Text="{Binding Text, UpdateSourceTrigger=LostFocus}" IsEnabled="{Binding CanEdit}"
+                                                         AcceptsReturn="{Binding IsMultiline}" TextWrapping="Wrap"
+                                                         AutomationProperties.Name="{Binding Label}" />
+                                            </DockPanel>
+
+                                            <CheckBox Content="{Binding Label}" IsChecked="{Binding IsChecked}"
+                                                      Visibility="{Binding IsToggle, Converter={StaticResource BoolToVisibility}}" />
+
+                                            <ComboBox ItemsSource="{Binding Choices}" SelectedItem="{Binding SelectedChoice}"
+                                                      Visibility="{Binding IsChoice, Converter={StaticResource BoolToVisibility}}"
+                                                      AutomationProperties.Name="{Binding Label}" />
+
+                                            <Button Content="Edit columns…" HorizontalAlignment="Left"
+                                                    Command="{Binding DataContext.EditColumnsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    Visibility="{Binding IsCollection, Converter={StaticResource BoolToVisibility}}" />
+
+                                            <TextBlock Text="{Binding Error}" Foreground="{DynamicResource Brush.Danger}" TextWrapping="Wrap"
+                                                       Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="2" Background="{DynamicResource Brush.Background}" BorderBrush="{DynamicResource Brush.Border}" BorderThickness="0,1,0,0">
+            <DockPanel Margin="{StaticResource Inset.2}" LastChildFill="True">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <TextBlock Text="{Binding UnsavedText}" Foreground="{DynamicResource Brush.Warning}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                    <TextBlock Text="{Binding SelectionText}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                    <TextBlock Text="{Binding PageSizeText}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                    <TextBlock Text="{Binding ZoomText}" Style="{StaticResource Text.Caption}" Margin="{StaticResource Inset.1}" />
+                </StackPanel>
+                <TextBlock Text="{Binding Status}" Style="{StaticResource Text.Caption}" VerticalAlignment="Center" Margin="{StaticResource Inset.1}" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>
