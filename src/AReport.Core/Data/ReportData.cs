@@ -48,6 +48,20 @@ public sealed class ReportData
 
     public ReportData AddImageFile(string key, string path) => AddImage(key, File.ReadAllBytes(path));
 
+    /// <summary>A copy that can be extended (for example with design defaults) without changing the caller's data.</summary>
+    public ReportData Clone()
+    {
+        var copy = new ReportData();
+        foreach (var pair in _variables) copy._variables[pair.Key] = pair.Value;
+        foreach (var pair in _sources) copy._sources[pair.Key] = pair.Value;
+        foreach (var pair in _images) copy._images[pair.Key] = pair.Value;
+        foreach (var pair in _imageErrors) copy._imageErrors[pair.Key] = pair.Value;
+        return copy;
+    }
+
+    /// <summary>True when an image (or the reason it could not be read) is registered under the key.</summary>
+    public bool HasImage(string key) => _images.ContainsKey(key) || _imageErrors.ContainsKey(key);
+
     public bool TryGetVariable(string name, out object? value) => _variables.TryGetValue(name, out value);
 
     public bool TryGetDataSource(string name, out IReadOnlyList<object?> rows)

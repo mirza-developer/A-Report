@@ -1,4 +1,5 @@
 using System.Globalization;
+using AReport.Fonts;
 
 namespace AReport;
 
@@ -13,6 +14,9 @@ public sealed class ReportOptions
 
     /// <summary>When true an unresolved placeholder throws instead of producing a warning.</summary>
     public bool StrictBindings { get; set; }
+
+    /// <summary>Font folders and fallbacks for Persian, Chinese and other non-Latin text.</summary>
+    public FontOptions Fonts { get; } = new();
 
     /// <summary>Deflate-compress PDF content streams (turn off to debug the raw PDF).</summary>
     public bool CompressPdf { get; set; } = true;

@@ -4,7 +4,8 @@ namespace AReport.Model;
 public static class ArtFormat
 {
     public const string Identifier = "art";
-    public const int CurrentVersion = 1;
+    /// <summary>Version 2 added bands, the dictionary, shapes, barcodes, repeaters and richer text. Version 1 files load unchanged.</summary>
+    public const int CurrentVersion = 2;
     public const string Extension = ".art";
     public const string MimeType = "application/vnd.areport.art+json";
 }

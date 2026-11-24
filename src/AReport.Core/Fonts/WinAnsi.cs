@@ -30,6 +30,12 @@ public static class WinAnsi
 
     public static bool IsSupported(char c) => TryEncode(c, out _);
 
+    private static readonly Dictionary<byte, char> Decoded = Specials.ToDictionary(p => p.Value, p => p.Key);
+
+    /// <summary>The character a WinAnsi byte stands for ('?' when unassigned).</summary>
+    public static char Decode(byte code) =>
+        code is >= (byte)' ' and <= (byte)'~' or >= 0xA0 ? (char)code : Decoded.TryGetValue(code, out var c) ? c : '?';
+
     public static bool IsFullySupported(string text) => text.All(IsSupported);
 
     /// <summary>Unsupported characters become '?'.</summary>

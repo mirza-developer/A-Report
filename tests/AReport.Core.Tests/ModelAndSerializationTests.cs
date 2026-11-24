@@ -108,7 +108,7 @@ public class ArtSerializerTests
         var json = _serializer.Serialize(SampleDesign());
 
         Assert.Contains("\"format\": \"art\"", json);
-        Assert.Contains("\"schemaVersion\": 1", json);
+        Assert.Contains("\"schemaVersion\": 2", json);
         Assert.Contains("\"type\": \"text\"", json);
         Assert.Contains("\"type\": \"table\"", json);
         Assert.Contains("\"horizontalAlignment\": \"Center\"", json);

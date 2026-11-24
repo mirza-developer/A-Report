@@ -25,6 +25,7 @@
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />
+    <Content Include="Fonts\*.ttf;Fonts\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\..\samples\reports\*" Link="samples\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

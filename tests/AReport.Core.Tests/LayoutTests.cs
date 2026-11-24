@@ -241,7 +241,7 @@ public class LayoutEngineTests
     {
         var table = TestKit.Table("Items", 10, ("X", "Nope"));
         var doc = _engine.Layout(TestKit.Design(table), new ReportData().AddDataSource("Items", TestKit.Rows(5)));
-        Assert.Equal("Table 'Table " + table.Id[..6] + "': column binding 'Nope' was not found.", Assert.Single(doc.Warnings));
+        Assert.Equal("Placeholder '{.Nope}' could not be resolved.", Assert.Single(doc.Warnings));
     }
 
     [Fact]
@@ -384,10 +384,13 @@ public class LayoutEngineTests
     }
 
     [Fact]
-    public void Characters_outside_winansi_warn()
+    public void Characters_without_any_font_warn_once_and_draw_question_marks()
     {
-        var doc = _engine.Layout(TestKit.Design(TestKit.Text("\u0633\u0644\u0627\u0645")), new ReportData());
-        Assert.Contains("WinAnsi", Assert.Single(doc.Warnings));
+        var doc = TestKit.LayoutStandardFontsOnly().Layout(TestKit.Design(TestKit.Text("\u0633\u0644\u0627\u0645")), new ReportData());
+        var warning = Assert.Single(doc.Warnings);
+        Assert.Contains("No installed font has glyphs for 3 character(s)", warning);
+        var runs = Assert.IsType<TextItem>(Assert.Single(doc.Pages[0].Items)).Lines[0].Runs!;
+        Assert.All(runs, r => Assert.True(r.Codes.All(c => c == '?')));
     }
 
     [Fact]

@@ -5,29 +5,45 @@ namespace AReport.Layout;
 
 public sealed record TextBlock(IReadOnlyList<TextLine> Lines, double ContentHeightMm);
 
-/// <summary>Word wrapping, alignment and vertical placement of text inside a box. The only place that does this.</summary>
-public sealed class TextLayouter(IFontMetrics metrics)
+/// <summary>Word wrapping, bidi, alignment and vertical placement of text inside a box. The only place that does this.</summary>
+public sealed class TextLayouter
 {
     public const double DefaultPaddingMm = 1;
+
+    private readonly FontSystem _fonts;
+    private readonly TextShaper _shaper;
+
+    public TextLayouter(FontSystem fonts)
+    {
+        _fonts = fonts;
+        _shaper = new TextShaper(fonts);
+    }
+
+    /// <summary>Latin-only layout with the built-in PDF fonts (kept for callers that only have font metrics).</summary>
+    public TextLayouter(IFontMetrics metrics) : this(FontSystem.StandardOnly)
+    {
+    }
+
+    public FontSystem Fonts => _fonts;
 
     public TextBlock Arrange(
         string text, FontSpec font,
         double xMm, double yMm, double widthMm, double heightMm,
         HAlign horizontal, VAlign vertical, bool wrap,
-        double paddingMm = DefaultPaddingMm)
+        double paddingMm = DefaultPaddingMm,
+        TextDirection direction = TextDirection.Auto,
+        DigitStyle digits = DigitStyle.Latin,
+        Action<string>? warn = null)
     {
-        double innerWidthPt = Units.MmToPt(Math.Max(0, widthMm - 2 * paddingMm));
+        double innerWidthPt = wrap ? Units.MmToPt(Math.Max(0, widthMm - 2 * paddingMm)) : double.PositiveInfinity;
         var paragraphs = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
 
-        var lines = new List<string>();
+        var shaped = new List<ShapedLine>();
         foreach (var paragraph in paragraphs)
-        {
-            if (wrap) lines.AddRange(Wrap(paragraph, font, innerWidthPt));
-            else lines.Add(paragraph);
-        }
+            shaped.AddRange(_shaper.Layout(paragraph, font, direction, digits, innerWidthPt, warn));
 
-        double lineHeightMm = Units.PtToMm(metrics.LineHeightPt(font));
-        double contentHeight = lines.Count * lineHeightMm;
+        double lineHeightMm = Units.PtToMm(font.SizePt * 1.2);
+        double contentHeight = shaped.Count * lineHeightMm;
         double top = vertical switch
         {
             VAlign.Middle => yMm + (heightMm - contentHeight) / 2,
@@ -36,58 +52,18 @@ public sealed class TextLayouter(IFontMetrics metrics)
         };
         double ascentMm = Units.PtToMm(font.SizePt * 0.9);
 
-        var result = new List<TextLine>(lines.Count);
-        for (int i = 0; i < lines.Count; i++)
+        var result = new List<TextLine>(shaped.Count);
+        for (int i = 0; i < shaped.Count; i++)
         {
-            double lineWidthMm = Units.PtToMm(metrics.MeasureWidthPt(lines[i], font));
+            double lineWidthMm = Units.PtToMm(shaped[i].WidthPt);
             double x = horizontal switch
             {
                 HAlign.Center => xMm + (widthMm - lineWidthMm) / 2,
                 HAlign.Right => xMm + widthMm - paddingMm - lineWidthMm,
                 _ => xMm + paddingMm,
             };
-            result.Add(new TextLine(lines[i], x, top + i * lineHeightMm + ascentMm));
+            result.Add(new TextLine(shaped[i].Text, x, top + i * lineHeightMm + ascentMm, shaped[i].Runs, lineWidthMm));
         }
         return new TextBlock(result, contentHeight);
-    }
-
-    private IEnumerable<string> Wrap(string paragraph, FontSpec font, double maxWidthPt)
-    {
-        if (paragraph.Length == 0)
-        {
-            yield return "";
-            yield break;
-        }
-
-        string current = "";
-        foreach (var word in paragraph.Split(' '))
-        {
-            string candidate = current.Length == 0 ? word : current + " " + word;
-            if (metrics.MeasureWidthPt(candidate, font) <= maxWidthPt)
-            {
-                current = candidate;
-                continue;
-            }
-
-            if (current.Length > 0)
-            {
-                yield return current;
-                current = "";
-            }
-
-            // The word alone may still be too wide: break it by characters.
-            string rest = word;
-            while (rest.Length > 0 && metrics.MeasureWidthPt(rest, font) > maxWidthPt)
-            {
-                int fit = 1;
-                while (fit < rest.Length && metrics.MeasureWidthPt(rest[..(fit + 1)], font) <= maxWidthPt)
-                    fit++;
-                yield return rest[..fit];
-                rest = rest[fit..];
-            }
-            current = rest;
-        }
-
-        yield return current;
     }
 }

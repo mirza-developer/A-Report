@@ -290,10 +290,10 @@ public class SampleDataTests
         var resolver = new ValueResolver();
 
         data.TryGetVariable("Name", out var name);
-        Assert.Equal("‹Name›", name);
+        Assert.Equal("[Name]", name);
         data.TryGetVariable("Customer", out var customer);
         Assert.True(resolver.TryResolve(customer, "Address.City", out var city));
-        Assert.Equal("‹Customer.Address.City›", city);
+        Assert.Equal("[Customer.Address.City]", city);
         Assert.False(data.TryGetVariable("PageNumber", out _));
         Assert.False(data.TryGetVariable("Now", out _));
     }

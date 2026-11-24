@@ -57,6 +57,9 @@ public sealed class StandardFontMetrics : IFontMetrics
 
     public double LineHeightPt(FontSpec font) => font.SizePt * 1.2;
 
+    /// <summary>Width of one character in 1/1000 em.</summary>
+    public double CharWidth1000(char c, FontSpec font) => CharWidth(c, StandardFonts.ResolveFamily(font.Family), font.Bold);
+
     private static int CharWidth(char c, StandardFonts.Family family, bool bold)
     {
         if (family == StandardFonts.Family.Courier) return 600;

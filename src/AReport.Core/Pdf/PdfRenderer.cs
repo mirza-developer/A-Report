@@ -1,4 +1,5 @@
 using System.Text;
+using AReport.Barcodes;
 using AReport.Fonts;
 using AReport.Imaging;
 using AReport.Layout;
@@ -24,7 +25,7 @@ public sealed class PdfRenderer(ReportOptions options, TimeProvider? time = null
         int pagesRoot = file.Reserve();
         int info = file.Reserve();
 
-        var fonts = new Dictionary<string, (string Resource, int Id)>();
+        var fonts = new PdfFontResources(file, options.CompressPdf);
         var images = new Dictionary<ReportImage, (string Resource, int Id)>();
 
         var contentIds = new List<int>();
@@ -34,9 +35,10 @@ public sealed class PdfRenderer(ReportOptions options, TimeProvider? time = null
             contentIds.Add(file.Add(PdfSyntax.Stream("", content, options.CompressPdf)));
         }
 
+        fonts.Write();
         var resources = new StringBuilder("<< /ProcSet [/PDF /Text /ImageB /ImageC]");
-        if (fonts.Count > 0)
-            resources.Append(" /Font << ").AppendJoin(' ', fonts.Values.Select(f => $"/{f.Resource} {f.Id} 0 R")).Append(" >>");
+        if (!fonts.IsEmpty)
+            resources.Append(' ').Append(fonts.ResourceDictionary());
         if (images.Count > 0)
             resources.Append(" /XObject << ").AppendJoin(' ', images.Values.Select(i => $"/{i.Resource} {i.Id} 0 R")).Append(" >>");
         resources.Append(" >>");
@@ -62,7 +64,7 @@ public sealed class PdfRenderer(ReportOptions options, TimeProvider? time = null
     }
 
     private byte[] BuildContent(LaidOutPage page, PdfFile file,
-        Dictionary<string, (string Resource, int Id)> fonts, Dictionary<ReportImage, (string Resource, int Id)> images)
+        PdfFontResources fonts, Dictionary<ReportImage, (string Resource, int Id)> images)
     {
         double pageHeightPt = Units.MmToPt(page.HeightMm);
         double X(double mm) => Units.MmToPt(mm);
@@ -95,26 +97,29 @@ public sealed class PdfRenderer(ReportOptions options, TimeProvider? time = null
                 {
                     var lines = t.Lines.Where(line => line.Text.Length > 0).ToList();
                     if (lines.Count == 0) break;
-                    string pdfName = StandardFonts.PdfName(t.Font);
-                    if (!fonts.TryGetValue(pdfName, out var font))
-                    {
-                        int id = file.Add($"<< /Type /Font /Subtype /Type1 /BaseFont /{pdfName} /Encoding /WinAnsiEncoding >>");
-                        font = ($"F{fonts.Count + 1}", id);
-                        fonts[pdfName] = font;
-                    }
 
                     Write("q\n");
+                    if (Math.Abs(t.RotationDeg) > 1e-9)
+                    {
+                        double cx = X(t.XMm + t.WidthMm / 2), cy = Y(t.YMm + t.HeightMm / 2);
+                        double radians = t.RotationDeg * Math.PI / 180, cos = Math.Cos(radians), sin = Math.Sin(radians);
+                        Write($"1 0 0 1 {PdfSyntax.Num(cx)} {PdfSyntax.Num(cy)} cm\n{PdfSyntax.Num(cos)} {PdfSyntax.Num(sin)} {PdfSyntax.Num(-sin)} {PdfSyntax.Num(cos)} 0 0 cm\n1 0 0 1 {PdfSyntax.Num(-cx)} {PdfSyntax.Num(-cy)} cm\n");
+                    }
                     Write($"{PdfSyntax.Num(X(t.XMm))} {PdfSyntax.Num(Y(t.YMm + t.HeightMm))} {PdfSyntax.Num(X(t.WidthMm))} {PdfSyntax.Num(X(t.HeightMm))} re W n\n");
-                    Write($"BT\n/{font.Resource} {PdfSyntax.Num(t.Font.SizePt)} Tf\n{Rgb(t.Color)} rg\n");
                     foreach (var line in lines)
                     {
-                        Write($"1 0 0 1 {PdfSyntax.Num(X(line.XMm))} {PdfSyntax.Num(Y(line.BaselineYMm))} Tm\n(");
-                        ms.Write(EscapeLiteral(WinAnsi.Encode(line.Text)));
-                        Write(") Tj\n");
+                        if (line.Runs is null) WriteLegacyLine(ms, fonts, t, line, X, Y, Rgb);
+                        else WriteRuns(ms, fonts, t, line, X, Y, Rgb);
                     }
-                    Write("ET\nQ\n");
+                    Write("Q\n");
                     break;
                 }
+                case ShapeItem shape:
+                    WriteShape(ms, shape, X, Y, Rgb);
+                    break;
+                case BarcodeItem barcode:
+                    WriteBarcode(ms, barcode, X, Y, Rgb);
+                    break;
                 case ImageItem i:
                 {
                     if (!images.TryGetValue(i.Image, out var image))
@@ -129,6 +134,169 @@ public sealed class PdfRenderer(ReportOptions options, TimeProvider? time = null
             }
         }
         return ms.ToArray();
+    }
+
+
+    private const double Kappa = 0.5522847498;
+
+    private static void WriteShape(MemoryStream ms, ShapeItem shape, Func<double, double> x, Func<double, double> y, Func<RgbColor, string> rgb)
+    {
+        bool fill = shape.Fill is not null, stroke = shape.Stroke is not null && shape.StrokeWidthMm > 0;
+        if (!fill && !stroke) return;
+
+        double left = x(shape.XMm), right = x(shape.XMm + shape.WidthMm);
+        double top = y(shape.YMm), bottom = y(shape.YMm + shape.HeightMm);   // PDF: top > bottom
+        double w = right - left, h = top - bottom;
+
+        var path = new StringBuilder();
+        string N(double v) => PdfSyntax.Num(v);
+
+        switch (shape.Kind)
+        {
+            case ShapeKind.Rectangle:
+                path.Append($"{N(left)} {N(bottom)} {N(w)} {N(h)} re\n");
+                break;
+
+            case ShapeKind.RoundedRectangle:
+            {
+                double r = Math.Min(Units.MmToPt(Math.Max(0, shape.CornerRadiusMm)), Math.Min(w, h) / 2), k = r * Kappa;
+                path.Append($"{N(left + r)} {N(bottom)} m\n{N(right - r)} {N(bottom)} l\n");
+                path.Append($"{N(right - r + k)} {N(bottom)} {N(right)} {N(bottom + r - k)} {N(right)} {N(bottom + r)} c\n");
+                path.Append($"{N(right)} {N(top - r)} l\n");
+                path.Append($"{N(right)} {N(top - r + k)} {N(right - r + k)} {N(top)} {N(right - r)} {N(top)} c\n");
+                path.Append($"{N(left + r)} {N(top)} l\n");
+                path.Append($"{N(left + r - k)} {N(top)} {N(left)} {N(top - r + k)} {N(left)} {N(top - r)} c\n");
+                path.Append($"{N(left)} {N(bottom + r)} l\n");
+                path.Append($"{N(left)} {N(bottom + r - k)} {N(left + r - k)} {N(bottom)} {N(left + r)} {N(bottom)} c\nh\n");
+                break;
+            }
+
+            case ShapeKind.Ellipse:
+            {
+                double cx = (left + right) / 2, cy = (top + bottom) / 2, rx = w / 2, ry = h / 2, kx = rx * Kappa, ky = ry * Kappa;
+                path.Append($"{N(cx + rx)} {N(cy)} m\n");
+                path.Append($"{N(cx + rx)} {N(cy + ky)} {N(cx + kx)} {N(cy + ry)} {N(cx)} {N(cy + ry)} c\n");
+                path.Append($"{N(cx - kx)} {N(cy + ry)} {N(cx - rx)} {N(cy + ky)} {N(cx - rx)} {N(cy)} c\n");
+                path.Append($"{N(cx - rx)} {N(cy - ky)} {N(cx - kx)} {N(cy - ry)} {N(cx)} {N(cy - ry)} c\n");
+                path.Append($"{N(cx + kx)} {N(cy - ry)} {N(cx + rx)} {N(cy - ky)} {N(cx + rx)} {N(cy)} c\nh\n");
+                break;
+            }
+
+            default:
+            {
+                var points = ShapeGeometry.Polygon(shape.Kind);
+                if (points is null) return;
+                for (int i = 0; i < points.Length; i++)
+                    path.Append($"{N(left + points[i].X * w)} {N(top - points[i].Y * h)} {(i == 0 ? "m" : "l")}\n");
+                path.Append("h\n");
+                break;
+            }
+        }
+
+        var sb = new StringBuilder("q\n");
+        if (fill) sb.Append(rgb(shape.Fill!.Value)).Append(" rg\n");
+        if (stroke) sb.Append(rgb(shape.Stroke!.Value)).Append(" RG\n").Append(N(Units.MmToPt(shape.StrokeWidthMm))).Append(" w\n");
+        sb.Append(path).Append(fill && stroke ? "B\n" : fill ? "f\n" : "S\n").Append("Q\n");
+        ms.Write(PdfSyntax.Ascii(sb.ToString()));
+    }
+
+    /// <summary>Dark modules as rectangles; identical runs in consecutive rows are merged into one taller rectangle.</summary>
+    private static void WriteBarcode(MemoryStream ms, BarcodeItem item, Func<double, double> x, Func<double, double> y, Func<RgbColor, string> rgb)
+    {
+        var matrix = item.Matrix;
+        double moduleW = Units.MmToPt(item.WidthMm) / matrix.Columns, moduleH = Units.MmToPt(item.HeightMm) / matrix.Rows;
+        double left = x(item.XMm), top = y(item.YMm);
+
+        var sb = new StringBuilder($"q\n{rgb(item.Color)} rg\n");
+        var open = new Dictionary<(int Start, int Length), int>();
+        void Flush((int Start, int Length) run, int startRow, int endRowExclusive) =>
+            sb.Append($"{PdfSyntax.Num(left + run.Start * moduleW)} {PdfSyntax.Num(top - endRowExclusive * moduleH)} {PdfSyntax.Num(run.Length * moduleW)} {PdfSyntax.Num((endRowExclusive - startRow) * moduleH)} re\n");
+
+        var runsByRow = matrix.DarkRuns().GroupBy(r => r.Row).ToDictionary(g => g.Key, g => g.Select(r => (r.Start, r.Length)).ToHashSet());
+        for (int row = 0; row <= matrix.Rows; row++)
+        {
+            var current = runsByRow.TryGetValue(row, out var set) && row < matrix.Rows ? set : [];
+            foreach (var run in open.Keys.ToList())
+            {
+                if (current.Contains(run)) continue;
+                Flush(run, open[run], row);
+                open.Remove(run);
+            }
+            foreach (var run in current) open.TryAdd(run, row);
+        }
+        sb.Append("f\nQ\n");
+        ms.Write(PdfSyntax.Ascii(sb.ToString()));
+    }
+
+    private static void Put(MemoryStream ms, string text) => ms.Write(PdfSyntax.Ascii(text));
+
+    /// <summary>A line without shaped glyphs: WinAnsi text in the item's standard font.</summary>
+    private static void WriteLegacyLine(MemoryStream ms, PdfFontResources fonts, TextItem item, TextLine line,
+        Func<double, double> x, Func<double, double> y, Func<RgbColor, string> rgb)
+    {
+        var resource = fonts.Use(new StandardFace(item.Font));
+        Put(ms, $"BT\n/{resource} {PdfSyntax.Num(item.Font.SizePt)} Tf\n{rgb(item.Color)} rg\n");
+        Put(ms, $"1 0 0 1 {PdfSyntax.Num(x(line.XMm))} {PdfSyntax.Num(y(line.BaselineYMm))} Tm\n(");
+        ms.Write(EscapeLiteral(WinAnsi.Encode(line.Text)));
+        Put(ms, ") Tj\nET\n");
+    }
+
+    /// <summary>Shaped runs, left to right. TrueType runs use 2-byte glyph ids; RTL and shaped runs carry their logical text.</summary>
+    private static void WriteRuns(MemoryStream ms, PdfFontResources fonts, TextItem item, TextLine line,
+        Func<double, double> x, Func<double, double> y, Func<RgbColor, string> rgb)
+    {
+        double size = item.Font.SizePt;
+        double penMm = line.XMm;
+
+        foreach (var run in line.Runs!)
+        {
+            var resource = fonts.Use(run);
+            double widthPt = run.Advances1000.Sum() * size / 1000.0;
+            bool trueType = run.Face is TrueTypeFace;
+            bool shaped = trueType && (run.IsRightToLeft || run.Sources is { } s && s.Any(src => src.Length != 1 || src[0] > 0x7F));
+
+            if (shaped)
+                Put(ms, "/Span << /ActualText <FEFF" + Convert.ToHexString(Encoding.BigEndianUnicode.GetBytes(run.Text)) + "> >> BDC\n");
+
+            string skew = run.Face.SyntheticItalic ? "0.2126" : "0";
+            string header = $"BT\n/{resource} {PdfSyntax.Num(size)} Tf\n{rgb(item.Color)} rg\n"
+                + (run.Face.SyntheticBold ? $"{rgb(item.Color)} RG\n{PdfSyntax.Num(size * 0.03)} w\n2 Tr\n" : "");
+
+            if (trueType && run.IsRightToLeft && run.Codes.Count > 1)
+            {
+                // Right-to-left runs are written one glyph at a time in LOGICAL order, each at its visual position,
+                // so text extraction (copy, search) reads the text in the right order.
+                int n = run.Codes.Count;
+                var offsets = new double[n];
+                double acc = 0;
+                for (int v = 0; v < n; v++) { offsets[v] = acc; acc += run.Advances1000[v] * size / 1000.0; }
+
+                Put(ms, header);
+                for (int logical = 0; logical < n; logical++)
+                {
+                    int visual = n - 1 - logical;
+                    Put(ms, $"1 0 {skew} 1 {PdfSyntax.Num(x(penMm + Units.PtToMm(offsets[visual])))} {PdfSyntax.Num(y(line.BaselineYMm))} Tm\n<{run.Codes[visual]:X4}> Tj\n");
+                }
+                Put(ms, "ET\n");
+            }
+            else
+            {
+                Put(ms, header);
+                Put(ms, $"1 0 {skew} 1 {PdfSyntax.Num(x(penMm))} {PdfSyntax.Num(y(line.BaselineYMm))} Tm\n");
+                if (trueType)
+                    Put(ms, "<" + string.Concat(run.Codes.Select(c => c.ToString("X4"))) + "> Tj\n");
+                else
+                {
+                    Put(ms, "(");
+                    ms.Write(EscapeLiteral(run.Codes.Select(c => (byte)c).ToArray()));
+                    Put(ms, ") Tj\n");
+                }
+                Put(ms, "ET\n");
+            }
+            if (shaped) Put(ms, "EMC\n");
+
+            penMm += Units.PtToMm(widthPt);
+        }
     }
 
     private static byte[] EscapeLiteral(byte[] bytes)
